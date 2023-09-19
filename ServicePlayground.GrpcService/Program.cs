@@ -4,7 +4,8 @@ using ServicePlayground.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseWindowsService();
-
+builder.Configuration.AddJsonFile("appsettings.json");
+builder.Configuration.AddEnvironmentVariables();
 // Additional configuration is required to successfully run gRPC on macOS.
 // For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682
 
@@ -19,8 +20,7 @@ var dbName = databaseSettings["Database"];
 // Add services to the container.
 builder.Services.AddGrpc();
 builder.Services.AddMemoryCache();
-builder.Services.AddSingleton<IMongoContext>(e => 
-    new MongoContext(e.GetService<ILogger<MongoContext>>(), connectionString, dbName));
+builder.Services.AddSingleton<IMongoContext, MongoContext>();
 builder.Services.AddHostedService<ItemsListener>();
 
 var app = builder.Build();

@@ -11,7 +11,8 @@ var databaseSettings = config.GetRequiredSection("DatabaseSettings");
 var connectionString = databaseSettings["ConnectionString"];
 var dbName = databaseSettings["Database"];
 
-builder.Services.AddSingleton<IMongoContext>(e => new MongoContext(e.GetService<ILogger<MongoContext>>(), connectionString, dbName));
+// builder.Services.AddSingleton<IMongoContext>(e => new MongoContext(e.GetService<ILogger<MongoContext>>(), connectionString, dbName));
+builder.Services.AddSingleton<IMongoContext, MongoContext>();
 builder.Services.AddMemoryCache();
 
 builder.Services.AddHostedService<ItemsListener>();

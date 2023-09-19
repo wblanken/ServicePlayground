@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -22,11 +23,13 @@ public class MongoContext : IMongoContext
     private readonly ILogger<MongoContext> logger;
     private readonly MongoClient client;
     private readonly IMongoDatabase database;
-    
-    public MongoContext(ILogger<MongoContext> logger, string connectionString, string dbName)
+
+    public MongoContext(ILogger<MongoContext> logger, IConfiguration configuration)
     {
-        this.logger = logger;
-        
+        var databaseSettings = configuration.GetRequiredSection("DatabaseSettings");
+        var connectionString = databaseSettings["ConnectionString"];
+        var dbName = databaseSettings["Database"];
+
         if (string.IsNullOrEmpty(connectionString))
         {
             this.logger.LogError($"Connection string arg cannot be empty!");
@@ -46,6 +49,7 @@ public class MongoContext : IMongoContext
         });
         BsonClassMap.RegisterClassMap<Item>();
         
+        this.logger = logger;
         client = new MongoClient(connectionString);
         database = client.GetDatabase(dbName);
     }
@@ -63,13 +67,16 @@ public class MongoContext : IMongoContext
     {
         var collection = GetCollection<TCollection>();
         
-        using var cursor = await collection.WatchAsync();
+        using var cursor = await collection.WatchAsync(options: new ChangeStreamOptions { FullDocument = ChangeStreamFullDocumentOption.UpdateLookup });
         await cursor.ForEachAsync(changedItem =>
         {
             logger.LogInformation(
                 $"Change detected: {changedItem.OperationType} in the {collection.CollectionNamespace.CollectionName} collection.");
 
-            var change = new MongoCollectionChange<TCollection>();
+            var change = new MongoCollectionChange<TCollection>()
+            {
+                Id = changedItem.DocumentKey["_id"].ToString()
+            };
 
             switch (changedItem.OperationType)
             {
@@ -85,7 +92,6 @@ public class MongoContext : IMongoContext
 
                 case ChangeStreamOperationType.Delete:
                     change.OperationType = OperationType.Delete;
-                    change.Id = changedItem.DocumentKey["_id"].ToString();
                     break;
 
                 // case ChangeStreamOperationType.Replace:

@@ -8,9 +8,9 @@ public abstract class MongoCollectionListener<TCollection, TWorker> : Background
     where TCollection : MongoItem
     where TWorker : MongoCollectionListener<TCollection, TWorker>
 {
-    protected readonly ILogger<TWorker> logger;
-    protected readonly IMongoContext dbContext;
-    protected readonly IMemoryCache memoryCache;
+    private readonly ILogger<TWorker> logger;
+    private readonly IMongoContext dbContext;
+    private readonly IMemoryCache memoryCache;
 
     protected MongoCollectionListener(ILogger<TWorker> logger, IMongoContext dbContext, IMemoryCache memoryCache)
     {
@@ -18,6 +18,8 @@ public abstract class MongoCollectionListener<TCollection, TWorker> : Background
         this.dbContext = dbContext;
         this.memoryCache = memoryCache;
     }
+
+    protected ILogger<TWorker> Logger => logger;
 
     public override async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -41,20 +43,52 @@ public abstract class MongoCollectionListener<TCollection, TWorker> : Background
         {
             switch (change.OperationType)
             {
-                case OperationType.Unkown:
-                    break;
                 case OperationType.Insert:
+                    var addedItem = cacheList.FirstOrDefault(f => f.Id == change.Id);
+                    if (addedItem is not null)
+                    {
+                        Logger.LogWarning($"Item with id {change.Id} aready exists in the cache!");
+                    }
+                    else
+                    {
+                        Logger.LogInformation($"Adding with id {change.Id} to the cache!");
+                        cacheList.Add(change.ChangedItem);    
+                    }
                     break;
+                
                 case OperationType.Update:
+                    var updatedItem = cacheList.FirstOrDefault(f => f.Id == change.Id);
+                    if (updatedItem is not null)
+                    {
+                        Logger.LogInformation($"Updating item with id {change.Id} int the cache!");
+                        cacheList.Remove(updatedItem);
+                        cacheList.Add(change.ChangedItem);
+                    }
+                    else
+                    {
+                        logger.LogWarning($"Item with id {change.Id} not found in cache to update!");
+                    }
                     break;
-                case OperationType.Replace:
-                    break;
+                
                 case OperationType.Delete:
+                    var removedItem = cacheList.FirstOrDefault(f => f.Id == change.Id);
+                    if (removedItem != null)
+                    {
+                        Logger.LogInformation($"Removing item with id {change.Id} from cache!");
+                        cacheList.Remove(removedItem);
+                    }
+                    else
+                    {
+                        logger.LogWarning($"Item with id {change.Id} not found in cache to remove!");
+                    }
                     break;
-                case OperationType.Invalidate:
-                    break;
+                // case OperationType.Replace:
+                //     break;
+                // case OperationType.Invalidate:
+                //     break;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    Logger.LogError($"Operation type {change.OperationType.ToString()} not implemented!");
+                    break;
             }
         }
     }
