@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Reflection;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
@@ -10,18 +11,17 @@ namespace ServicePlayground.Data;
 
 public interface IMongoContext
 {
-    public event EventHandler<ItemsChangedEventArgs> ItemsCollectionChanged;
-    public Task<List<Item>> GetAllItemsAsync();
+    public Task<List<TCollection>> GetAllAsync<TCollection>() 
+        where TCollection : MongoItem;
+    public Task StartWatch<TCollection>(Action<MongoCollectionChange<TCollection>> onCollectionItemChanged) 
+        where TCollection : MongoItem;
 }
 
 public class MongoContext : IMongoContext
 {
     private readonly ILogger<MongoContext> logger;
-    private MongoClient client;
-    private IMongoDatabase database;
-    private IMongoCollection<Item> items;
-
-    private Thread itemsWatcher;
+    private readonly MongoClient client;
+    private readonly IMongoDatabase database;
     
     public MongoContext(ILogger<MongoContext> logger, string connectionString, string dbName)
     {
@@ -37,81 +37,77 @@ public class MongoContext : IMongoContext
             this.logger.LogError($"Database arg cannot be empty!");
             throw new ArgumentException($"Database cannot be empty!", nameof(dbName));
         }
-        
-        BsonClassMap.RegisterClassMap<Item>(cm =>
+
+        BsonClassMap.RegisterClassMap<MongoItem>(cm =>
         {
             cm.AutoMap();
-            cm.MapIdField(c => c.Id).SetSerializer(new StringSerializer(BsonType.ObjectId));
+            cm.MapIdField(c => c.Id)
+                .SetSerializer(new StringSerializer(BsonType.ObjectId));
         });
+        BsonClassMap.RegisterClassMap<Item>();
         
         client = new MongoClient(connectionString);
         database = client.GetDatabase(dbName);
-        items = database.GetCollection<Item>(nameof(items));
+    }
+
+    public async Task<List<TCollection>> GetAllAsync<TCollection>()
+        where TCollection : MongoItem
+    {
+        var collection = GetCollection<TCollection>();
+        var filter = Builders<TCollection>.Filter.Empty;
+        return await collection.Find(filter).ToListAsync();
+    }
+
+    public async Task StartWatch<TCollection>(Action<MongoCollectionChange<TCollection>> onCollectionItemChanged)
+        where TCollection : MongoItem
+    {
+        var collection = GetCollection<TCollection>();
         
-        itemsWatcher = new Thread(StartItemsWatch);
-        itemsWatcher.Start();
-    }
-
-    public event EventHandler<ItemsChangedEventArgs> ItemsCollectionChanged;
-
-    public async Task<List<Item>> GetAllItemsAsync()
-    {
-        var filter = Builders<Item>.Filter.Empty;
-        return await items.Find(filter).ToListAsync();
-    }
-
-    private void StartItemsWatch()
-    {
-        var options = new ChangeStreamOptions
+        using var cursor = await collection.WatchAsync();
+        await cursor.ForEachAsync(changedItem =>
         {
-            FullDocument = ChangeStreamFullDocumentOption.UpdateLookup,
-            ShowExpandedEvents = false
-        };
-            
-        using (var cursor = items.Watch(options))
-        {
-            foreach (var changedItem in cursor.ToEnumerable())
+            logger.LogInformation(
+                $"Change detected: {changedItem.OperationType} in the {collection.CollectionNamespace.CollectionName} collection.");
+
+            var change = new MongoCollectionChange<TCollection>();
+
+            switch (changedItem.OperationType)
             {
-                logger.LogInformation($"Change detected: {changedItem.OperationType} in the Items collection.");
-                
-                var eventArgs = new ItemsChangedEventArgs
-                {
-                    OperationType = OperationType.Unkown,
-                    Item = new Item()
-                };
-                
-                switch (changedItem.OperationType)
-                {
-                    case ChangeStreamOperationType.Insert:
-                        eventArgs.OperationType = OperationType.Insert;
-                        eventArgs.Item = changedItem.FullDocument;
-                        break;
-                    
-                    case ChangeStreamOperationType.Update:
-                        eventArgs.OperationType = OperationType.Update;
-                        eventArgs.Item = changedItem.FullDocument;
-                        break;
-                    
-                    case ChangeStreamOperationType.Delete:
-                        eventArgs.OperationType = OperationType.Delete;
-                        eventArgs.Item.Id = changedItem.DocumentKey["_id"].ToString();
-                        break;
-                    
-                    // case ChangeStreamOperationType.Replace:
-                    //     eventArgs.OperationType = OperationType.Replace;
-                    //     break;
-                    
-                    // case ChangeStreamOperationType.Invalidate:
-                    //     eventArgs.OperationType = OperationType.Invalidate;
-                    //     break;
-                    default:
-                        logger.LogError($"Operation type {changedItem.OperationType.ToString()} not implemented!");
-                        break;
-                        // throw new NotImplementedException($"Operation type {changedItem.OperationType.ToString()} not implemented!");
-                }
-                    
-                ItemsCollectionChanged?.Invoke(this, eventArgs);
+                case ChangeStreamOperationType.Insert:
+                    change.OperationType = OperationType.Insert;
+                    change.ChangedItem = changedItem.FullDocument;
+                    break;
+
+                case ChangeStreamOperationType.Update:
+                    change.OperationType = OperationType.Update;
+                    change.ChangedItem = changedItem.FullDocument;
+                    break;
+
+                case ChangeStreamOperationType.Delete:
+                    change.OperationType = OperationType.Delete;
+                    change.Id = changedItem.DocumentKey["_id"].ToString();
+                    break;
+
+                // case ChangeStreamOperationType.Replace:
+                //     eventArgs.OperationType = OperationType.Replace;
+                //     break;
+
+                // case ChangeStreamOperationType.Invalidate:
+                //     eventArgs.OperationType = OperationType.Invalidate;
+                //     break;
+                default:
+                    logger.LogError($"Operation type {changedItem.OperationType.ToString()} not implemented!");
+                    break;
             }
-        }
+            
+            onCollectionItemChanged(change);
+        });
+    }
+
+    private IMongoCollection<TCollection> GetCollection<TCollection>()
+        where TCollection : MongoItem
+    {
+        var collectionName = MongoItem.GetCollectionName<TCollection>();
+        return database.GetCollection<TCollection>(collectionName);
     }
 }

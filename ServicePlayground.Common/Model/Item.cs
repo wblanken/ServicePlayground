@@ -1,8 +1,8 @@
 ﻿namespace ServicePlayground.Common.Model;
 
-public class Item
+[MongoItem("items")]
+public class Item : MongoItem
 {
-    public string Id { get; set; }
     public string Name { get; set; }
     public decimal Price { get; set; }
 }

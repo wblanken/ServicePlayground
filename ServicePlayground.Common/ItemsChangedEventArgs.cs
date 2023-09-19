@@ -2,10 +2,11 @@
 
 namespace ServicePlayground.Common;
 
-public class ItemsChangedEventArgs : EventArgs
+public class MongoCollectionChange<TCollection> where TCollection : MongoItem
 {
-    public Item Item { get; set; }
+    public string Id { get; set; }
     public OperationType OperationType { get; set; }
+    public TCollection? ChangedItem { get; set; }
 }
 
 public enum OperationType
