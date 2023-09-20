@@ -22,8 +22,7 @@ builder.Services.AddGrpc();
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IMongoContext, MongoContext>();
 builder.Services.AddHostedService<ItemsListener>();
-
-builder.Services.AddAutoMapper();
+builder.Services.AddAutoMapper(typeof(Program));
 
 var app = builder.Build();
 

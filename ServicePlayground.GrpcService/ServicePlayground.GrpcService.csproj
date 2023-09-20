@@ -8,7 +8,7 @@
 
     <ItemGroup>
         <Protobuf Include="Protos\greet.proto" GrpcServices="Server"/>
-        <Protobuf Include="Protos\item.proto" GrpcServices="Server"/>
+        <Protobuf Include="../ServicePlayground.Common/Protos/item.proto" Link="Protos/item.proto" GrpcServices="Server"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -22,5 +22,7 @@
     <ItemGroup>
       <ProjectReference Include="..\ServicePlayground.Service\ServicePlayground.Service.csproj" />
     </ItemGroup>
+
+
 
 </Project>
