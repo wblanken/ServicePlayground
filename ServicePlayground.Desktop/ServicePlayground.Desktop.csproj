@@ -11,4 +11,9 @@
       <ProjectReference Include="..\ServicePlayground.Common\ServicePlayground.Common.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+      <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+    </ItemGroup>
+
 </Project>
