@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using ServicePlayground.Common;
 using ServicePlayground.Protobuf.Proto;
 
 namespace ServicePlayground.Protobuf.Profiles;

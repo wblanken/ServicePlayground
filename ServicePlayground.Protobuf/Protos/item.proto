@@ -2,14 +2,13 @@
 
 option csharp_namespace = "ServicePlayground.Protobuf.Proto";
 
+import "google/protobuf/empty.proto";
+
 package item;
 
 service Items {
-  rpc GetItems(GetItemsRequest) returns (GetItemsResponse);
+  rpc GetItems(google.protobuf.Empty) returns (GetItemsResponse);
 }
-
-message GetItemsRequest {
-} 
 
 message GetItemsResponse {
   repeated Item items = 1;

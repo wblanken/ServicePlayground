@@ -9,11 +9,21 @@
 
     <ItemGroup>
       <ProjectReference Include="..\ServicePlayground.Common\ServicePlayground.Common.csproj" />
+      <ProjectReference Include="..\ServicePlayground.Protobuf\ServicePlayground.Protobuf.csproj" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+    </ItemGroup>
+
+
+
+    <ItemGroup>
+      <None Remove="appsettings.json" />
+      <Content Include="appsettings.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
 </Project>

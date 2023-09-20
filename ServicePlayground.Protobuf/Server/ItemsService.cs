@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -19,7 +20,8 @@ public class ItemsService : Items.ItemsBase
         this.mapper = mapper;
     }
 
-    public override Task<GetItemsResponse> GetItems(GetItemsRequest request, ServerCallContext context)
+    
+    public override Task<GetItemsResponse> GetItems(Empty request, ServerCallContext context)
     {
         var response = new GetItemsResponse();
         if (memoryCache.TryGetValue("items", out List<Common.Model.Item> items))
