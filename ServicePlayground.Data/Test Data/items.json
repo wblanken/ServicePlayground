@@ -1,0 +1,25 @@
+{
+    "_id" : ObjectId("6509e26b5d8e9f46f978013c"),
+    "Name" : "Thing1",
+    "Price" : 1.99
+}
+{
+    "_id" : ObjectId("6509e2f45d8e9f46f978013f"),
+    "Name" : "Thing2",
+    "Price" : 2.49
+}
+{
+    "_id" : ObjectId("6509e2f95d8e9f46f9780140"),
+    "Name" : "Thing3",
+    "Price" : 4.99
+}
+{
+    "_id" : ObjectId("6509e3445d8e9f46f9780141"),
+    "Name" : "Thing4",
+    "Price" : 7.99
+}
+{
+    "_id" : ObjectId("6509e3465d8e9f46f9780142"),
+    "Name" : "Thing5",
+    "Price" : 11.99
+}
