@@ -1,17 +1,18 @@
 ﻿using AutoMapper;
 using Grpc.Core;
 using Microsoft.Extensions.Caching.Memory;
-using ServicePlayground.Common.Proto;
+using Microsoft.Extensions.Logging;
+using ServicePlayground.Protobuf.Proto;
 
-namespace ServicePlayground.GrpcService.Services;
+namespace ServicePlayground.Protobuf.Server;
 
 public class ItemsService : Items.ItemsBase
 {
-    private readonly ILogger<GreeterService> logger;
+    private readonly ILogger<ItemsService> logger;
     private readonly IMemoryCache memoryCache;
     private readonly IMapper mapper;
     
-    public ItemsService(ILogger<GreeterService> logger, IMemoryCache memoryCache, IMapper mapper)
+    public ItemsService(ILogger<ItemsService> logger, IMemoryCache memoryCache, IMapper mapper)
     {
         this.logger = logger;
         this.memoryCache = memoryCache;

@@ -1,6 +1,6 @@
 ﻿syntax = "proto3";
 
-option csharp_namespace = "ServicePlayground.Common.Proto";
+option csharp_namespace = "ServicePlayground.Protobuf.Proto";
 
 package item;
 

@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServicePlayground.Data", "S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServicePlayground.GrpcService", "ServicePlayground.GrpcService\ServicePlayground.GrpcService.csproj", "{BD65C028-A751-41CC-A057-36CF7A429B32}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServicePlayground.Protobuf", "ServicePlayground.Protobuf\ServicePlayground.Protobuf.csproj", "{33A58B9E-7890-4D0B-8B0A-D468AE797CEC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{BD65C028-A751-41CC-A057-36CF7A429B32}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD65C028-A751-41CC-A057-36CF7A429B32}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD65C028-A751-41CC-A057-36CF7A429B32}.Release|Any CPU.Build.0 = Release|Any CPU
+		{33A58B9E-7890-4D0B-8B0A-D468AE797CEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33A58B9E-7890-4D0B-8B0A-D468AE797CEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33A58B9E-7890-4D0B-8B0A-D468AE797CEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33A58B9E-7890-4D0B-8B0A-D468AE797CEC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

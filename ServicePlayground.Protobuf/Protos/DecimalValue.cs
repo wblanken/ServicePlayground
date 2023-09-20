@@ -1,4 +1,4 @@
-﻿namespace ServicePlayground.Common.Proto;
+﻿namespace ServicePlayground.Protobuf.Proto;
 
 public partial class DecimalValue
 {

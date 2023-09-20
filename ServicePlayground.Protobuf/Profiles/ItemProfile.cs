@@ -1,16 +1,17 @@
 ﻿using AutoMapper;
-using ServicePlayground.Common.Proto;
+using ServicePlayground.Common;
+using ServicePlayground.Protobuf.Proto;
 
-namespace ServicePlayground.GrpcService.Profiles;
+namespace ServicePlayground.Protobuf.Profiles;
 
 public class ItemProfile : Profile
 {
     public ItemProfile()
     {
-        CreateMap<Common.Proto.Item, Common.Model.Item>()
+        CreateMap<Protobuf.Proto.Item, Common.Model.Item>()
             .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.Price.ToDecimal()));
         
-        CreateMap<Common.Model.Item, Common.Proto.Item>()
+        CreateMap<Common.Model.Item, Protobuf.Proto.Item>()
             .ForMember(dest => dest.Price, opt => opt.MapFrom(src => DecimalValue.FromDecimal(src.Price)));
     }
 }

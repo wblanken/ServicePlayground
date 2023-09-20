@@ -7,11 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Protobuf Include="Protos\greet.proto" GrpcServices="Server"/>
-        <Protobuf Include="../ServicePlayground.Common/Protos/item.proto" Link="Protos/item.proto" GrpcServices="Server"/>
-    </ItemGroup>
-
-    <ItemGroup>
         <PackageReference Include="AutoMapper" Version="12.0.1" />
         <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
         <PackageReference Include="Grpc.AspNetCore" Version="2.49.0"/>
@@ -20,8 +15,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\ServicePlayground.Protobuf\ServicePlayground.Protobuf.csproj" />
       <ProjectReference Include="..\ServicePlayground.Service\ServicePlayground.Service.csproj" />
     </ItemGroup>
+
 
 
 
