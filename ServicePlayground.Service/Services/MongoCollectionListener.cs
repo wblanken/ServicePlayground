@@ -1,15 +1,21 @@
 using Microsoft.Extensions.Caching.Memory;
 using ServicePlayground.Common;
+using ServicePlayground.Common.Model;
 using ServicePlayground.Data;
 
 namespace ServicePlayground.Service;
 
-public abstract class MongoCollectionListener<TCollection, TWorker> : BackgroundService
+public interface IDbService<TCollection>
+{
+    public Task<List<TCollection>> GetAllAsync();
+}
+
+public abstract class MongoCollectionListener<TCollection, TWorker> : BackgroundService, IDbService<TCollection>
     where TCollection : MongoItem
     where TWorker : MongoCollectionListener<TCollection, TWorker>
 {
     private readonly ILogger<TWorker> logger;
-    private readonly IMongoContext dbContext;
+    protected readonly IMongoContext dbContext;
     private readonly IMemoryCache memoryCache;
 
     protected MongoCollectionListener(ILogger<TWorker> logger, IMongoContext dbContext, IMemoryCache memoryCache)
@@ -20,12 +26,13 @@ public abstract class MongoCollectionListener<TCollection, TWorker> : Background
     }
 
     protected ILogger<TWorker> Logger => logger;
-
+    
+    public event Action<MongoCollectionChange<TCollection>>? OnMongoCollectionChanged;
+    
     public override async Task StartAsync(CancellationToken cancellationToken)
     {
         await base.StartAsync(cancellationToken);
-        var cacheList = await dbContext.GetAllAsync<TCollection>();
-        memoryCache.Set(MongoItem.GetCollectionName<TCollection>(), cacheList);
+        await GetAllAsync();
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -39,6 +46,7 @@ public abstract class MongoCollectionListener<TCollection, TWorker> : Background
 
     protected virtual void OnCollectionItemChanged(MongoCollectionChange<TCollection> change)
     {
+        var errored = false;
         if (memoryCache.TryGetValue(MongoItem.GetCollectionName<TCollection>(), out List<TCollection> cacheList))
         {
             switch (change.OperationType)
@@ -48,6 +56,7 @@ public abstract class MongoCollectionListener<TCollection, TWorker> : Background
                     if (addedItem is not null)
                     {
                         Logger.LogWarning($"Item with id {change.Id} aready exists in the cache!");
+                        errored = true;
                     }
                     else
                     {
@@ -67,6 +76,7 @@ public abstract class MongoCollectionListener<TCollection, TWorker> : Background
                     else
                     {
                         logger.LogWarning($"Item with id {change.Id} not found in cache to update!");
+                        errored = true;
                     }
                     break;
                 
@@ -80,6 +90,7 @@ public abstract class MongoCollectionListener<TCollection, TWorker> : Background
                     else
                     {
                         logger.LogWarning($"Item with id {change.Id} not found in cache to remove!");
+                        errored = true;
                     }
                     break;
                 // case OperationType.Replace:
@@ -87,9 +98,26 @@ public abstract class MongoCollectionListener<TCollection, TWorker> : Background
                 // case OperationType.Invalidate:
                 //     break;
                 default:
+                    errored = true;
                     Logger.LogError($"Operation type {change.OperationType.ToString()} not implemented!");
                     break;
             }
         }
+
+        if (!errored)
+        {
+            OnMongoCollectionChanged?.Invoke(change);
+        }
+    }
+    
+    public async Task<List<TCollection>> GetAllAsync()
+    {
+        if (!memoryCache.TryGetValue("items", out List<TCollection> cacheList))
+        {
+            cacheList = await dbContext.GetAllAsync<TCollection>();
+            memoryCache.Set(MongoItem.GetCollectionName<TCollection>(), cacheList);
+        }
+        
+        return cacheList;
     }
 }

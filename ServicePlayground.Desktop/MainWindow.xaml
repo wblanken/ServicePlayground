@@ -4,9 +4,16 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ServicePlayground.Desktop"
+        xmlns:vm="clr-namespace:ServicePlayground.Desktop.ViewModels"
         mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-
+        <DataGrid ItemsSource="{Binding Items}" AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}"/>
+                <DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat=C}"/>
+            </DataGrid.Columns>
+        </DataGrid>
     </Grid>
 </Window>

@@ -14,6 +14,13 @@ public abstract class ClientBase
     {
         Logger = logger;
         Mapper = mapper;
-        ServiceUrl = configuration.GetRequiredSection("Services")[$"{serviceName}:url"];
+        if(configuration.GetSection("WPF_USE_SERVER")?.Value.Equals("true", StringComparison.InvariantCultureIgnoreCase) ?? false)
+        {
+            ServiceUrl = configuration.GetRequiredSection("Services")[$"{serviceName}:devUrl"];
+        }
+        else
+        {
+            ServiceUrl = configuration.GetRequiredSection("Services")[$"{serviceName}:url"];
+        }
     }
 }

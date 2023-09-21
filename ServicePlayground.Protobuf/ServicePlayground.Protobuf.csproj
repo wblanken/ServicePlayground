@@ -19,6 +19,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\ServicePlayground.Common\ServicePlayground.Common.csproj" />
+      <ProjectReference Include="..\ServicePlayground.Service\ServicePlayground.Service.csproj" />
     </ItemGroup>
 
 

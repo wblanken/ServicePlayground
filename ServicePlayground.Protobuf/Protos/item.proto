@@ -3,11 +3,13 @@
 option csharp_namespace = "ServicePlayground.Protobuf.Proto";
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 
 package item;
 
 service Items {
-  rpc GetItems(google.protobuf.Empty) returns (GetItemsResponse);
+  rpc GetItems(google.protobuf.Empty) returns (GetItemsResponse);  
+  rpc Subscribe(SubscribeRequest) returns (stream SubscribeResponse);
 }
 
 message GetItemsResponse {
@@ -32,4 +34,18 @@ message DecimalValue {
   // If `units` is negative, `nanos` must be negative or zero.
   // For example $-1.75 is represented as `units`=-1 and `nanos`=-750,000,000.
   int32 nanos = 2;
-} 
+}
+
+message SubscribeRequest {
+  int32 editorPdId = 1;
+}
+
+message SubscribeResponse {
+  google.protobuf.Timestamp timestamp = 1;
+  repeated ItemUpdates updatedItems = 2;
+}
+
+message ItemUpdates {
+  Item item = 1;
+  string action = 2;
+}
