@@ -4,9 +4,9 @@ using ServicePlayground.Data;
 
 namespace ServicePlayground.Service;
 
-public class ItemsDbService : MongoCollectionListener<Item, ItemsDbService>
+public class ItemsDbService : DbServiceBase<Item, ItemsDbService>
 {
-    public ItemsDbService(ILogger<ItemsDbService> logger, IMongoContext dbContext, IMemoryCache memoryCache)
+    public ItemsDbService(ILogger<ItemsDbService> logger, MongoContext dbContext, IMemoryCache memoryCache)
         : base(logger, dbContext, memoryCache)
     {}
 }

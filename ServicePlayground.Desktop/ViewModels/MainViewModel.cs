@@ -1,6 +1,4 @@
-﻿
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ServicePlayground.Common.Model;
@@ -10,15 +8,12 @@ namespace ServicePlayground.Desktop.ViewModels;
 
 public class MainViewModel : ViewModelBase
 {
-    private readonly ILogger<MainViewModel> logger;
-    private readonly ItemsClient itemsClient;
-    
-    public static ObservableCollection<Item> Items { get; set; }
+    private ItemsClient ItemsClient { get; }
+    public static ObservableCollection<Item>? Items { get; private set; }
 
-    private MainViewModel(ILogger<MainViewModel> logger, ItemsClient itemsClient)
+    private MainViewModel(ILogger<MainViewModel> logger, ItemsClient itemsClient) : base(logger)
     {
-        this.logger = logger;
-        this.itemsClient = itemsClient;
+        ItemsClient = itemsClient;
     }
     
     public static MainViewModel LoadViewModel(ILogger<MainViewModel> logger, ItemsClient itemsClient)

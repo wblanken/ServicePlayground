@@ -1,6 +1,5 @@
-﻿using System.Reflection;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
@@ -10,35 +9,29 @@ using ServicePlayground.Common.Model;
 
 namespace ServicePlayground.Data;
 
-public interface IMongoContext
+public class MongoContext
 {
-    public Task<List<TCollection>> GetAllAsync<TCollection>() 
-        where TCollection : MongoItem;
-    public Task StartWatch<TCollection>(Action<MongoCollectionChange<TCollection>> onCollectionItemChanged) 
-        where TCollection : MongoItem;
-}
-
-public class MongoContext : IMongoContext
-{
-    private readonly ILogger<MongoContext> logger;
-    private readonly MongoClient client;
+    private ILogger<MongoContext> Logger { get; }
     private readonly IMongoDatabase database;
 
-    public MongoContext(ILogger<MongoContext> logger, IConfiguration configuration)
+    public MongoContext(ILogger<MongoContext> logger, IOptions<DatabaseSettings> databaseSettings)
     {
-        var databaseSettings = configuration.GetRequiredSection("DatabaseSettings");
-        var connectionString = databaseSettings["ConnectionString"];
-        var dbName = databaseSettings["Database"];
+        Logger = logger;
+        var connectionString = databaseSettings.Value.ConnectionString;
+        var dbName = databaseSettings.Value.DatabaseName;
 
         if (string.IsNullOrEmpty(connectionString))
         {
-            this.logger.LogError($"Connection string arg cannot be empty!");
-            throw new ArgumentException($"Connection string cannot be empty!", nameof(connectionString));
+            var ex = new ArgumentException("Connection string cannot be empty!", nameof(databaseSettings));
+            Logger.LogCritical(ex.Message);
+            throw ex;
         }
+        
         if (string.IsNullOrEmpty(dbName))
         {
-            this.logger.LogError($"Database arg cannot be empty!");
-            throw new ArgumentException($"Database cannot be empty!", nameof(dbName));
+            var ex = new ArgumentException("Database name cannot be empty!", nameof(databaseSettings));
+            Logger.LogCritical(ex.Message);
+            throw ex;
         }
 
         BsonClassMap.RegisterClassMap<MongoItem>(cm =>
@@ -49,8 +42,7 @@ public class MongoContext : IMongoContext
         });
         BsonClassMap.RegisterClassMap<Item>();
         
-        this.logger = logger;
-        client = new MongoClient(connectionString);
+        var client = new MongoClient(connectionString);
         database = client.GetDatabase(dbName);
     }
 
@@ -62,6 +54,34 @@ public class MongoContext : IMongoContext
         return await collection.Find(filter).ToListAsync();
     }
 
+    public async Task<TCollection> GetAsync<TCollection>(string id)
+        where TCollection : MongoItem
+    {
+        var collection = GetCollection<TCollection>();
+        return await collection.Find(x => x.Id == id).FirstOrDefaultAsync();
+    }
+
+    public async Task CreateAsync<TCollection>(TCollection newEntry)
+        where TCollection : MongoItem
+    {
+        var collection = GetCollection<TCollection>();
+        await collection.InsertOneAsync(newEntry);
+    }
+
+    public async Task UpdateAsync<TCollection>(string id, TCollection updatedEntry)
+        where TCollection : MongoItem
+    {
+        var collection = GetCollection<TCollection>();
+        var result = await collection.ReplaceOneAsync(x => x.Id == id, updatedEntry);
+    }
+
+    public async Task RemoveAsync<TCollection>(string id)
+        where TCollection : MongoItem
+    {
+        var collection = GetCollection<TCollection>();
+       var result = await collection.DeleteOneAsync(x => x.Id == id);
+    }
+
     public async Task StartWatch<TCollection>(Action<MongoCollectionChange<TCollection>> onCollectionItemChanged)
         where TCollection : MongoItem
     {
@@ -70,7 +90,7 @@ public class MongoContext : IMongoContext
         using var cursor = await collection.WatchAsync(options: new ChangeStreamOptions { FullDocument = ChangeStreamFullDocumentOption.UpdateLookup });
         await cursor.ForEachAsync(changedItem =>
         {
-            logger.LogInformation(
+            Logger.LogInformation(
                 $"Change detected: {changedItem.OperationType} in the {collection.CollectionNamespace.CollectionName} collection.");
 
             var change = new MongoCollectionChange<TCollection>()
@@ -102,7 +122,7 @@ public class MongoContext : IMongoContext
                 //     eventArgs.OperationType = OperationType.Invalidate;
                 //     break;
                 default:
-                    logger.LogError($"Operation type {changedItem.OperationType.ToString()} not implemented!");
+                    Logger.LogError($"Operation type {changedItem.OperationType.ToString()} not implemented!");
                     break;
             }
             

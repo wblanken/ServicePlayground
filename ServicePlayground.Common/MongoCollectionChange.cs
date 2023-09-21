@@ -4,7 +4,7 @@ namespace ServicePlayground.Common;
 
 public class MongoCollectionChange<TCollection> where TCollection : MongoItem
 {
-    public string Id { get; set; }
+    public string? Id { get; init; }
     public OperationType OperationType { get; set; }
     public TCollection? ChangedItem { get; set; }
 }

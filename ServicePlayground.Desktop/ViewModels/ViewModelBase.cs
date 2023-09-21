@@ -1,13 +1,20 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Microsoft.Extensions.Logging;
 
 namespace ServicePlayground.Desktop.ViewModels;
 
 public class ViewModelBase : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
-
+    
+    protected ILogger<ViewModelBase> Logger { get; }
+    public ViewModelBase(ILogger<ViewModelBase> logger)
+    {
+        Logger = logger;
+    }
+    
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
