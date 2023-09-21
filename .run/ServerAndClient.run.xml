@@ -1,0 +1,7 @@
+﻿<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="ServerAndClient" type="CompoundRunConfigurationType">
+    <toRun name="ServicePlayground.GrpcService: http" type="LaunchSettings" />
+    <toRun name="ServicePlayground.Desktop(Server)" type="DotNetProject" />
+    <method v="2" />
+  </configuration>
+</component>
