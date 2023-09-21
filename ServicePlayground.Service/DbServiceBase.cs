@@ -144,6 +144,7 @@ public abstract class DbServiceBase<TCollection, TWorker> : BackgroundService, I
     {
         throw new NotImplementedException();
     }
+    
     public virtual async Task UpdateAsync(string id, [NotNull] TCollection updatedEntry)
     {
         throw new NotImplementedException();

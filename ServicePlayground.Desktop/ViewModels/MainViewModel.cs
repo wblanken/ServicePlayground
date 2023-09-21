@@ -26,4 +26,18 @@ public class MainViewModel : ViewModelBase
         
         return viewModel;
     }
+
+    private async Task ItemChangeListener()
+    {
+        /*
+            var client = new Greet.GreeterClient(channel);
+            using var call = client.SayHellos(new HelloRequest { Name = "World" });
+
+            await foreach (var response in call.ResponseStream.ReadAllAsync())
+            {
+                Console.WriteLine("Greeting: " + response.Message);
+                // "Greeting: Hello World" is written multiple times
+            }
+         */
+    }
 }
